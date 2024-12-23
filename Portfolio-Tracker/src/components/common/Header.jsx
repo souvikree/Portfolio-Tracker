@@ -1,60 +1,57 @@
-/* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
+import GoogleLoginModal from "./GoogleLoginModal";  // Ensure this component is implemented for Google login
 
 const Header = ({ title, onAddStock }) => {
-  const location = useLocation(); // Hook to get current route
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation(); // Hook to get the current route
+  const [isModalOpen, setIsModalOpen] = useState(false);  // Modal state for stock addition
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);  // Modal state for Google login
   const [formData, setFormData] = useState({
     name: "",
     ticker: "",
     quantity: "",
     buyPrice: "",
   });
-  const [portfolioValue, setPortfolioValue] = useState(0);
+  const [portfolioValue, setPortfolioValue] = useState(0);  // State to track the portfolio value
 
+  // Handle form input changes for stock data
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  // Handle form submission for adding a stock
   const handleSubmit = (e) => {
     e.preventDefault();
     const newStockValue = parseFloat(formData.quantity) * parseFloat(formData.buyPrice);
-    setPortfolioValue(portfolioValue + newStockValue);
-    onAddStock(formData);
-    setFormData({ name: "", ticker: "", quantity: "", buyPrice: "" });
-    setIsModalOpen(false);
+    setPortfolioValue(portfolioValue + newStockValue);  // Update portfolio value
+    onAddStock(formData);  // Pass the stock data to the parent component
+    setFormData({ name: "", ticker: "", quantity: "", buyPrice: "" });  // Clear form data
+    setIsModalOpen(false);  // Close the modal
   };
 
-  // Define routes where "Add Stock" button should appear
+  // Define routes where the "Add Stock" button should appear
   const showAddStockButton = ["/", "/current-stocks"].includes(location.pathname);
 
   return (
     <>
-      {/* Header */}
+      {/* Header Section */}
       <header className="bg-gray-800 bg-opacity-50 backdrop-blur-md border-b border-gray-700 rounded-b-xl mx-4 shadow-lg">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           {/* Title */}
           <h1 className="text-2xl font-semibold text-gray-100">{title}</h1>
 
-          {/* Actions */}
+          {/* Actions (Login and Add Stock) */}
           <div className="flex space-x-4">
-            {/* Login */}
+            {/* Signin Button */}
             <button
-              className="text-white text-sm font-medium py-2 px-4 hover:text-blue-400 focus:ring focus:ring-blue-400 transition"
+              onClick={() => setIsGoogleModalOpen(true)}
+              className="text-white text-sm font-medium py-2 px-4 hover:text-blue-400 transition"
             >
-              Login
+              Signin
             </button>
 
-            {/* Register */}
-            {/* <button
-              className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-blue-700 focus:ring focus:ring-blue-400 transition"
-            >
-              Register
-            </button> */}
-
-            {/* Add Stock (conditionally rendered) */}
+            {/* Add Stock Button (only visible on certain routes) */}
             {showAddStockButton && (
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -67,7 +64,14 @@ const Header = ({ title, onAddStock }) => {
         </div>
       </header>
 
-      {/* Modal */}
+      {isGoogleModalOpen && (
+        <GoogleLoginModal
+          isOpen={isGoogleModalOpen}
+          onClose={() => setIsGoogleModalOpen(false)}  // Close modal when done
+        />
+      )}
+
+      {/* Add Stock Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75">
           <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
@@ -89,6 +93,7 @@ const Header = ({ title, onAddStock }) => {
                   required
                 />
               </div>
+
               {/* Stock Ticker */}
               <div className="mb-4">
                 <label htmlFor="ticker" className="block text-gray-700 font-medium">
@@ -105,6 +110,7 @@ const Header = ({ title, onAddStock }) => {
                   required
                 />
               </div>
+
               {/* Quantity */}
               <div className="mb-4">
                 <label htmlFor="quantity" className="block text-gray-700 font-medium">
@@ -121,6 +127,7 @@ const Header = ({ title, onAddStock }) => {
                   required
                 />
               </div>
+
               {/* Buy Price */}
               <div className="mb-4">
                 <label htmlFor="buyPrice" className="block text-gray-700 font-medium">
@@ -137,11 +144,12 @@ const Header = ({ title, onAddStock }) => {
                   required
                 />
               </div>
-              {/* Submit Button */}
+
+              {/* Submit Buttons */}
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => setIsModalOpen(false)}  // Close modal when Cancel is clicked
                   className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-500 focus:ring focus:ring-gray-300 mr-2"
                 >
                   Cancel

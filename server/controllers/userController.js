@@ -1,6 +1,8 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
+const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const { oauth2Client } = require('../utils/googleClient'); // Ensure you create a proper OAuth2 client utility
 
 // Signup
 exports.signup = async (req, res) => {
@@ -44,11 +46,56 @@ exports.login = async (req, res) => {
         }
 
         // Generate token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id, email }, process.env.JWT_SECRET, {
+            expiresIn: '1h',
+        });
 
         res.status(200).json({ message: 'Login successful', token });
     } catch (error) {
         res.status(500).json({ message: 'Error logging in', error: error.message });
+    }
+};
+
+// Google OAuth Authentication
+exports.googleAuth = async (req, res) => {
+    const code = req.query.code; // Authorization code from Google
+    if (!code) {
+        return res.status(400).json({ message: 'Authorization code not provided' });
+    }
+
+    try {
+        // Exchange code for tokens
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+
+        // Retrieve user info
+        const userInfo = await axios.get(
+            `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
+        );
+        const { email, name, picture } = userInfo.data;
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+        if (!user) {
+            // Create a new user if not found
+            user = await User.create({ name, email, image: picture });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ userId: user._id, email }, process.env.JWT_SECRET, {
+            expiresIn: '1h',
+        });
+
+        res.status(200).json({
+            message: 'Authentication successful',
+            token,
+            user,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: 'Error during Google authentication',
+            error: error.message,
+        });
     }
 };
 
@@ -61,7 +108,7 @@ exports.logout = (req, res) => {
     }
 };
 
-// Get Current User (Optional)
+// Get Current User
 exports.getCurrentUser = async (req, res) => {
     try {
         const user = await User.findById(req.userId).select('-password'); // Exclude password
@@ -73,3 +120,19 @@ exports.getCurrentUser = async (req, res) => {
         res.status(500).json({ message: 'Error fetching user', error: error.message });
     }
 };
+
+// Middleware to Authenticate JWT
+// exports.authenticateToken = (req, res, next) => {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     if (!token) {
+//         return res.status(401).json({ message: 'Access token missing' });
+//     }
+
+//     try {
+//         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//         req.userId = decoded.userId;
+//         next();
+//     } catch (error) {
+//         res.status(403).json({ message: 'Invalid or expired token' });
+//     }
+// };
