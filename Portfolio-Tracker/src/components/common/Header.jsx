@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import GoogleLoginModal from "./GoogleLoginModal";  // Ensure this component is implemented for Google login
+import axios from "axios";
 
 const Header = ({ title, onAddStock }) => {
   const location = useLocation(); // Hook to get the current route
-  const [isModalOpen, setIsModalOpen] = useState(false);  // Modal state for stock addition
-  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);  // Modal state for Google login
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state for stock addition
   const [formData, setFormData] = useState({
-    name: "",
+    stockName: "",
     ticker: "",
     quantity: "",
     buyPrice: "",
   });
-  const [portfolioValue, setPortfolioValue] = useState(0);  // State to track the portfolio value
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for handling submission status
+  const [portfolioValue, setPortfolioValue] = useState(0); // State to track the portfolio value
 
   // Handle form input changes for stock data
   const handleInputChange = (e) => {
@@ -21,13 +21,45 @@ const Header = ({ title, onAddStock }) => {
   };
 
   // Handle form submission for adding a stock
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newStockValue = parseFloat(formData.quantity) * parseFloat(formData.buyPrice);
-    setPortfolioValue(portfolioValue + newStockValue);  // Update portfolio value
-    onAddStock(formData);  // Pass the stock data to the parent component
-    setFormData({ name: "", ticker: "", quantity: "", buyPrice: "" });  // Clear form data
-    setIsModalOpen(false);  // Close the modal
+
+    // Validate form data
+    if (!formData.stockName || !formData.ticker || !formData.quantity || !formData.buyPrice) {
+      alert("Please fill out all fields.");
+      return;
+    }
+
+    const stockData = {
+      stockName: formData.stockName,
+      ticker: formData.ticker,
+      quantity: parseFloat(formData.quantity),
+      buyPrice: parseFloat(formData.buyPrice),
+    };
+
+    setIsSubmitting(true); // Set submission state to true
+    try {
+      // Send a POST request to the backend
+      const response = await axios.post("http://localhost:8080/api/stocks/add", stockData);
+
+      if (response.status === 200) {
+        // Success: Update portfolio value and pass data to parent
+        const newStockValue = stockData.quantity * stockData.buyPrice;
+        setPortfolioValue(portfolioValue + newStockValue);
+        onAddStock(stockData);
+
+        // Reset form and close modal
+        setFormData({ stockName: "", ticker: "", quantity: "", buyPrice: "" });
+        setIsModalOpen(false);
+        alert("Stock added successfully!");
+      }
+    } catch (error) {
+      // Handle errors (e.g., display error message)
+      console.error("Error adding stock:", error.response?.data || error.message);
+      alert("Failed to add stock: " + (error.response?.data?.message || "Unknown error"));
+    } finally {
+      setIsSubmitting(false); // Reset submission state
+    }
   };
 
   // Define routes where the "Add Stock" button should appear
@@ -38,20 +70,8 @@ const Header = ({ title, onAddStock }) => {
       {/* Header Section */}
       <header className="bg-gray-800 bg-opacity-50 backdrop-blur-md border-b border-gray-700 rounded-b-xl mx-4 shadow-lg">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          {/* Title */}
           <h1 className="text-2xl font-semibold text-gray-100">{title}</h1>
-
-          {/* Actions (Login and Add Stock) */}
           <div className="flex space-x-4">
-            {/* Signin Button */}
-            <button
-              onClick={() => setIsGoogleModalOpen(true)}
-              className="text-white text-sm font-medium py-2 px-4 hover:text-blue-400 transition"
-            >
-              Signin
-            </button>
-
-            {/* Add Stock Button (only visible on certain routes) */}
             {showAddStockButton && (
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -64,29 +84,22 @@ const Header = ({ title, onAddStock }) => {
         </div>
       </header>
 
-      {isGoogleModalOpen && (
-        <GoogleLoginModal
-          isOpen={isGoogleModalOpen}
-          onClose={() => setIsGoogleModalOpen(false)}  // Close modal when done
-        />
-      )}
-
       {/* Add Stock Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75">
           <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Add Stock Details</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Add Stock</h2>
             <form onSubmit={handleSubmit}>
               {/* Stock Name */}
               <div className="mb-4">
-                <label htmlFor="name" className="block text-gray-700 font-medium">
+                <label htmlFor="stockName" className="block text-gray-700 font-medium">
                   Stock Name
                 </label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
+                  id="stockName"
+                  name="stockName"
+                  value={formData.stockName}
                   onChange={handleInputChange}
                   className="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-400"
                   placeholder="e.g., Apple Inc."
@@ -94,7 +107,7 @@ const Header = ({ title, onAddStock }) => {
                 />
               </div>
 
-              {/* Stock Ticker */}
+              {/* Ticker Symbol */}
               <div className="mb-4">
                 <label htmlFor="ticker" className="block text-gray-700 font-medium">
                   Ticker Symbol
@@ -145,20 +158,23 @@ const Header = ({ title, onAddStock }) => {
                 />
               </div>
 
-              {/* Submit Buttons */}
+              {/* Buttons */}
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}  // Close modal when Cancel is clicked
+                  onClick={() => setIsModalOpen(false)}
                   className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-500 focus:ring focus:ring-gray-300 mr-2"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 focus:ring focus:ring-blue-400"
+                  className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 focus:ring focus:ring-blue-400 ${
+                    isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={isSubmitting}
                 >
-                  Add Stock
+                  {isSubmitting ? "Adding..." : "Add Stock"}
                 </button>
               </div>
             </form>

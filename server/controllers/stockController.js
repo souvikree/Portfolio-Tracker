@@ -1,15 +1,12 @@
 const Stock = require('../models/Stock');
-const Portfolio = require('../models/Portfolio');
+const getTheLatestStockPrice = require('../utils/getTheLatestStockPrice');
 
-
+// Add a new stock
 exports.addStock = async (req, res) => {
     try {
-        const { stockName, ticker, quantity, buyPrice, portfolioId } = req.body;
-        const stock = new Stock({ stockName, ticker, quantity, buyPrice, portfolio: portfolioId });
+        const { stockName, ticker, quantity, buyPrice } = req.body;
+        const stock = new Stock({ stockName, ticker, quantity, buyPrice });
         await stock.save();
-
-        // Add stock to portfolio
-        await Portfolio.findByIdAndUpdate(portfolioId, { $push: { stocks: stock._id } });
 
         res.status(201).json({ message: 'Stock added successfully', stock });
     } catch (error) {
@@ -17,62 +14,64 @@ exports.addStock = async (req, res) => {
     }
 };
 
-
+// Update existing stock details
 exports.updateStock = async (req, res) => {
+    const { ticker } = req.params;
+    const { stockName, quantity, buyPrice } = req.body;
+
     try {
-        const { portfolioId, stockId } = req.params;
-        const { ticker, price, quantity } = req.body;
-        const portfolio = await Portfolio.findById(portfolioId);
-        const stock = portfolio.stocks.id(stockId);
-
-        stock.ticker = ticker || stock.ticker;
-        stock.price = price || stock.price;
-        stock.quantity = quantity || stock.quantity;
-
-        await portfolio.save();
-        res.status(200).json({ message: 'Stock updated successfully', portfolio });
+        const updatedStock = await Stock.findOneAndUpdate(
+            { ticker },
+            { stockName, quantity, buyPrice },
+            { new: true }
+        );
+        if (!updatedStock) {
+            return res.status(404).json({ error: 'Stock not found' });
+        }
+        res.json(updatedStock);
     } catch (error) {
-        res.status(500).json({ message: 'Error updating stock', error });
+        console.error('Error editing stock:', error.message);
+        res.status(500).json({ error: 'Error editing stock' });
     }
 };
 
-
+// Delete a stock
 exports.deleteStock = async (req, res) => {
+    const { ticker } = req.params;
     try {
-        const { portfolioId, stockId } = req.params;
-        const portfolio = await Portfolio.findById(portfolioId);
-        portfolio.stocks.pull(stockId);
-
-        await portfolio.save();
-        res.status(200).json({ message: 'Stock deleted successfully', portfolio });
+        const deletedStock = await Stock.findOneAndDelete({ ticker });
+        if (!deletedStock) {
+            return res.status(404).json({ error: 'Stock not found' });
+        }
+        res.json({ message: 'Stock deleted successfully', deletedStock });
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting stock', error });
+        console.error('Error deleting stock:', error.message);
+        res.status(500).json({ error: 'Error deleting stock' });
     }
 };
 
-
-
-
+// Fetch all stocks and calculate the portfolio value
 exports.getStocks = async (req, res) => {
     try {
-        // You can filter by portfolio or user if necessary
         const stocks = await Stock.find();
-
-        let totalValue = 0;
-
-        // Calculate the total portfolio value by fetching real-time prices
-        for (let stock of stocks) {
-            const realTimePrice = await fetchStockPrice(stock.ticker);
-            if (realTimePrice) {
-                // Assume quantity is 1 for each stock
-                totalValue += realTimePrice * stock.quantity; // Calculate total value
-            } else {
-                console.log(`Could not fetch price for ${stock.ticker}`);
-            }
-        }
-
-        res.status(200).json({ stocks, totalValue }); // Return the stocks and total value
+        res.json(stocks);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching stocks', error });
+        console.error('Error fetching stocks from database:', error.message);
+        res.status(500).json({ error: 'Error fetching stocks from database' });
+    }
+};
+
+
+exports.getStockPrice = async (req, res) => {
+    const { ticker } = req.params;
+    try {
+        const priceData = await getTheLatestStockPrice(ticker);
+        if (!priceData || !priceData.currentPrice) {
+            return res.status(404).json({ error: `Stock price data not found for ${ticker}` });
+        }
+        res.json(priceData);
+    } catch (error) {
+        console.error(`Error fetching stock price for ${ticker}:`, error.message);
+        res.status(500).json({ error: 'Error fetching stock price' });
     }
 };
