@@ -40,7 +40,7 @@ const Header = ({ title, onAddStock }) => {
     setIsSubmitting(true); // Set submission state to true
     try {
       // Send a POST request to the backend
-      const response = await axios.post("http://localhost:8080/api/stocks/add", stockData);
+      const response = await axios.post("http://localhost:8080/api/stocks/", stockData);
 
       if (response.status === 200) {
         // Success: Update portfolio value and pass data to parent

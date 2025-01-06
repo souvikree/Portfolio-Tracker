@@ -1,20 +1,23 @@
 const axios = require('axios');
 
+
 // Service to fetch stock prices using Finnhub API
 const getTheLatestStockPrice = async (ticker) => {
     try {
         const response = await axios.get('https://finnhub.io/api/v1/quote', {
             params: {
-                symbol: ticker,  // Use symbol instead of ticker
-                token: process.env.FINNHUB_API_KEY, // Your API key here
+                symbol: ticker,
+                token: process.env.FINNHUB_API_KEY,
             },
         });
 
         const { c: currentPrice, d: change, dp: changePercent } = response.data;
 
-        if (!currentPrice) {
-            console.error(`No price data for ${ticker}`);
-            throw new Error(`Stock price data not found for ${ticker}`);
+        // Check the remaining rate limit
+        const remaining = response.headers['X-RateLimit-Remaining'];
+        if (remaining <= 0) {
+            console.error(`Rate limit exceeded, try again later.`);
+            throw new Error(`Rate limit exceeded for ${ticker}`);
         }
 
         return { ticker, currentPrice, change, changePercent };

@@ -65,13 +65,13 @@ exports.getStocks = async (req, res) => {
 exports.getStockPrice = async (req, res) => {
     const { ticker } = req.params;
     try {
-        const priceData = await getTheLatestStockPrice(ticker);
-        if (!priceData || !priceData.currentPrice) {
+        const priceData = await getTheLatestStockPrice.getTheLatestStockPrice(ticker);
+        if (!priceData) {
             return res.status(404).json({ error: `Stock price data not found for ${ticker}` });
         }
         res.json(priceData);
     } catch (error) {
-        console.error(`Error fetching stock price for ${ticker}:`, error.message);
+        // console.error(`Error fetching stock price for ${ticker}:`, error.message);
         res.status(500).json({ error: 'Error fetching stock price' });
     }
 };
