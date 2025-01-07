@@ -1,7 +1,8 @@
 import { Edit, Search, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import EditStockModal from "../common/EditStockModal"; 
+import { useStocks } from "../../context/StockContext";
 const fetchStockPrices = async (ticker) => {
   try {
     const response = await axios.get(`http://localhost:8080/api/stocks/stocks/${ticker}`);
@@ -28,6 +29,7 @@ const updateStockPriceAndProfitLoss = async (stock) => {
 };
 
 const StocksTable = () => {
+  const { deleteStock, editStock } = useStocks();
   const [stocks, setStocks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredStocks, setFilteredStocks] = useState([]);
@@ -36,7 +38,7 @@ const StocksTable = () => {
   const [editingStock, setEditingStock] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch stock data from backend on component mount
+
   useEffect(() => {
     const getStocks = async () => {
       setLoading(true);
@@ -76,9 +78,9 @@ const StocksTable = () => {
           stock.ticker.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredStocks(filtered);
-    }, 300); // Wait 300ms after the user stops typing
+    }, 300); 
 
-    return () => clearTimeout(timeoutId); // Clear the timeout if searchTerm changes
+    return () => clearTimeout(timeoutId);
   }, [searchTerm, stocks]);
 
   // Handle edit modal
@@ -87,15 +89,13 @@ const StocksTable = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSave = (updatedStock) => {
-    setStocks((prev) =>
-      prev.map((stock) => (stock.id === updatedStock.id ? updatedStock : stock))
-    );
+  const handleSave = async (updatedStock) => {
+    await editStock(updatedStock); 
     setIsEditModalOpen(false);
-  };
+};
 
   const handleDelete = (id) => {
-    setStocks((prev) => prev.filter((stock) => stock.id !== id));
+    deleteStock(id);
   };
 
   return (
@@ -134,10 +134,10 @@ const StocksTable = () => {
           </thead>
           <tbody className="divide-y divide-gray-700">
             {filteredStocks.map((stock) => (
-              <tr key={stock.id}>
+              <tr key={stock._id}>
                 <td className="px-6 py-4 text-bold text-gray-100">{stock.stockName}</td>
-                <td className="px-6 py-4 text-sm text-gray-300">{stock.ticker}</td>
-                <td className="px-6 py-4 text-gray-300">{stock.quantity}</td>
+                <td className="px-2 mx-6 my-4 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-800 text-blue-100">{stock.ticker}</td>
+                <td className="px-10 py-4 text-gray-300">{stock.quantity}</td>
                 <td className="px-6 py-4 text-green-500">${stock.buyPrice.toFixed(2)}</td>
                 <td className="px-6 py-4 text-blue-400">
                   ${stock.currentPrice?.toFixed(2) || (loading ? "Loading..." : "N/A")}
@@ -149,7 +149,7 @@ const StocksTable = () => {
                   <button className="text-indigo-400 hover:text-indigo-300 mr-2" onClick={() => handleEdit(stock)}>
                     <Edit size={18} />
                   </button>
-                  <button className="text-red-400 hover:text-red-300" onClick={() => handleDelete(stock.id)}>
+                  <button className="text-red-400 hover:text-red-300" onClick={() => handleDelete(stock._id)}>
                     <Trash2 size={18} />
                   </button>
                 </td>
@@ -163,78 +163,6 @@ const StocksTable = () => {
       {isEditModalOpen && (
         <EditStockModal stock={editingStock} onSave={handleSave} onCancel={() => setIsEditModalOpen(false)} />
       )}
-    </div>
-  );
-};
-
-const EditStockModal = ({ stock, onSave, onCancel }) => {
-  const [formData, setFormData] = useState(stock);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75">
-      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Stock</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700">Stock Name</label>
-            <input
-              type="text"
-              name="stockName"
-              value={formData.stockName}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Ticker</label>
-            <input
-              type="text"
-              name="ticker"
-              value={formData.ticker}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Quantity</label>
-            <input
-              type="number"
-              name="quantity"
-              value={formData.quantity}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Buy Price</label>
-            <input
-              type="number"
-              name="buyPrice"
-              value={formData.buyPrice}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded"
-            />
-          </div>
-          <div className="flex justify-end">
-            <button type="button" onClick={onCancel} className="bg-red-500 text-white px-4 py-2 rounded mr-2">
-              Cancel
-            </button>
-            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-              Save
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
   );
 };

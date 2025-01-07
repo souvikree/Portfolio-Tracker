@@ -1,4 +1,4 @@
-import { LayoutDashboard, Menu, UserRound, ChartNoAxesCombined,  TrendingUp, Users } from "lucide-react";  //DollarSign ShoppingCart
+import { LayoutDashboard, Menu, UserRound, ChartNoAxesCombined } from "lucide-react";  //DollarSign ShoppingCart
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -11,10 +11,6 @@ const SIDEBAR_ITEMS = [
 		href: "/",
 	},
 	{ name: "Current Stocks", icon: ChartNoAxesCombined, color: "#8B5CF6", href: "/current-stocks" },
-	{ name: "Users", icon: Users, color: "#EC4899", href: "/users" },
-	// { name: "Sales", icon: DollarSign, color: "#10B981", href: "/sales" },
-	// { name: "Orders", icon: ShoppingCart, color: "#F59E0B", href: "/orders" },
-	{ name: "Analytics", icon: TrendingUp, color: "#3B82F6", href: "/analytics" },
 	{ name: "Profile", icon: UserRound, color: "#6EE7B7", href: "/settings" },
 ];
 

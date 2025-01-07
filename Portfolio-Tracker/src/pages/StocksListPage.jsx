@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import Header from "../components/common/Header";
 import { useStocks } from "../context/StockContext"; // Importing StockContext
-import StocksTable from "../components/products/StocksTable";
+import StocksTable from "../components/stocks/StocksTable";
 
 const StocksListPage = () => {
     const { stocks, loading } = useStocks();
