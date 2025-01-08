@@ -19,11 +19,7 @@ const userSchema = new mongoose.Schema({
         type: String, 
          
     },
-    portfolios: [
-        { type: mongoose.Schema.Types.ObjectId, 
-            ref: 'Portfolio' 
-        }
-    ],
+    
 });
 
 module.exports = mongoose.model('User', userSchema);

@@ -1,11 +1,14 @@
 import { Edit, Search, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import EditStockModal from "../common/EditStockModal"; 
+import EditStockModal from "../common/EditStockModal";
 import { useStocks } from "../../context/StockContext";
+
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 const fetchStockPrices = async (ticker) => {
   try {
-    const response = await axios.get(`http://localhost:8080/api/stocks/stocks/${ticker}`);
+    const response = await axios.get(`${API_URL}/stocks/${ticker}`);
     return response.data.currentPrice || 0;
   } catch (error) {
     console.error(`Error fetching price for ${ticker}:`, error);
@@ -29,7 +32,7 @@ const updateStockPriceAndProfitLoss = async (stock) => {
 };
 
 const StocksTable = () => {
-  const { deleteStock, editStock } = useStocks();
+  const { deleteStock, editStock, error } = useStocks();
   const [stocks, setStocks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredStocks, setFilteredStocks] = useState([]);
@@ -38,26 +41,27 @@ const StocksTable = () => {
   const [editingStock, setEditingStock] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Fetch and update stocks
+  const refreshStocks = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/`);
+      const stocksData = response.data;
+
+      const updatedStocks = await Promise.all(
+        stocksData.map((stock) => updateStockPriceAndProfitLoss(stock))
+      );
+
+      setStocks(updatedStocks);
+    } catch (err) {
+      console.error("Error fetching stocks:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const getStocks = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get("http://localhost:8080/api/stocks/");
-        const stocksData = response.data;
-
-        const updatedStocks = await Promise.all(
-          stocksData.map((stock) => updateStockPriceAndProfitLoss(stock))
-        );
-
-        setStocks(updatedStocks);
-      } catch (err) {
-        console.error("Error fetching stocks:", err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getStocks();
+    refreshStocks();
   }, []);
 
   // Update total portfolio value
@@ -78,25 +82,33 @@ const StocksTable = () => {
           stock.ticker.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredStocks(filtered);
-    }, 300); 
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm, stocks]);
 
-  // Handle edit modal
   const handleEdit = (stock) => {
     setEditingStock(stock);
     setIsEditModalOpen(true);
   };
 
   const handleSave = async (updatedStock) => {
-    await editStock(updatedStock); 
+    await editStock(updatedStock);
     setIsEditModalOpen(false);
-};
-
-  const handleDelete = (id) => {
-    deleteStock(id);
+    refreshStocks(); // Refresh stocks after saving
   };
+
+  const handleDelete = async (id, stockName) => {
+    const confirmed = window.confirm(`Are you sure you want to delete the stock: ${stockName}?`);
+    if (confirmed) {
+      alert(`The stock ${stockName} is being deleted.`);
+      await deleteStock(id);
+      refreshStocks(); // Refresh stocks after deletion
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="bg-gray-800 bg-opacity-50 shadow-lg rounded-xl p-6 mb-10">
@@ -114,10 +126,18 @@ const StocksTable = () => {
         </div>
       </div>
 
-      <p className="text-gray-300 mb-4">
-        Total Portfolio Value:{" "}
-        <span className="text-green-400">${portfolioValue.toFixed(2)}</span>
-      </p>
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-gray-300">
+          Total Portfolio Value:{" "}
+          <span className="text-green-400">${portfolioValue.toFixed(2)}</span>
+        </p>
+        <button
+          onClick={refreshStocks}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Refresh Table
+        </button>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-700">
@@ -149,7 +169,7 @@ const StocksTable = () => {
                   <button className="text-indigo-400 hover:text-indigo-300 mr-2" onClick={() => handleEdit(stock)}>
                     <Edit size={18} />
                   </button>
-                  <button className="text-red-400 hover:text-red-300" onClick={() => handleDelete(stock._id)}>
+                  <button className="text-red-400 hover:text-red-300" onClick={() => handleDelete(stock._id, stock.stockName)}>
                     <Trash2 size={18} />
                   </button>
                 </td>
@@ -159,7 +179,6 @@ const StocksTable = () => {
         </table>
       </div>
 
-      {/* Edit Stock Modal */}
       {isEditModalOpen && (
         <EditStockModal stock={editingStock} onSave={handleSave} onCancel={() => setIsEditModalOpen(false)} />
       )}

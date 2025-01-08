@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
-import { googleAuth } from "./api";
+import { googleAuth } from "./api"; // Your API function to handle Google OAuth
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 
@@ -16,7 +16,7 @@ const GoogleLoginModal = ({ isOpen, onClose }) => {
         const token = result.data.token;
         const obj = { email, name, token, image };
         localStorage.setItem("user-info", JSON.stringify(obj));
-        navigate("/");
+        navigate("/"); // Navigate to the home page after successful login
       } else {
         throw new Error(authResult);
       }

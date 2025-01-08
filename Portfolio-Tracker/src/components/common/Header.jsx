@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import AddStock from "./AddStock";
+import GoogleLoginModal from "./GoogleLoginModal"; // Import the GoogleLoginModal
 
 const Header = ({ title, onAddStock }) => {
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false); // State for Google Login Modal
 
   const showAddStockButton = ["/", "/current-stocks"].includes(location.pathname);
 
@@ -22,15 +24,27 @@ const Header = ({ title, onAddStock }) => {
                 Add Stock
               </button>
             )}
+            {/* Add Sign In Button */}
+            <button
+              onClick={() => setIsGoogleModalOpen(true)}
+              className="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-green-700 focus:ring focus:ring-green-400 transition"
+            >
+              Sign In
+            </button>
           </div>
         </div>
       </header>
 
-  
       <AddStock
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddStock={onAddStock}
+      />
+
+      {/* Google Login Modal */}
+      <GoogleLoginModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)} // Close the Google modal
       />
     </>
   );

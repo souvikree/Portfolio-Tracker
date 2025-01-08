@@ -17,7 +17,7 @@ import { useStocks } from "../../context/StockContext";
 
 const COLORS = ["#6366F1", "#8B5CF6", "#EC4899", "#10B981", "#F59E0B"];
  
-const SalesChannelChart = () => {
+const CandleChart = () => {
   const { stocks, fetchStockPrices } = useStocks(); 
   const [stockData, setStockData] = useState([]);
   const [portfolioValue, setPortfolioValue] = useState(0);
@@ -91,4 +91,4 @@ const SalesChannelChart = () => {
   );
 };
 
-export default SalesChannelChart;
+export default CandleChart;

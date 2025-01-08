@@ -3,8 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
-// Set the API base URL from environment variables
-const API_URL ="http://localhost:8080/api/stocks";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const StocksContext = createContext();
 
@@ -21,7 +20,7 @@ const StocksProvider = ({ children }) => {
     // Fetch stock price and calculate profit/loss
     const fetchStockPrices = async (ticker) => {
         try {
-          const response = await axios.get(`http://localhost:8080/api/stocks/stocks/${ticker}`);
+          const response = await axios.get(`${API_URL}/stocks/${ticker}`);
           return response.data.currentPrice || 0;
         } catch (error) {
           console.error(`Error fetching price for ${ticker}:`, error);
@@ -47,7 +46,7 @@ const StocksProvider = ({ children }) => {
     // Fetch stocks from the backend and update their profit/loss
     const fetchStocks = async () => {
         try {
-            const response = await axios.get("http://localhost:8080/api/stocks/");
+            const response = await axios.get(`${API_URL}/`);
             const stocksData = response.data;
     
             const updatedStocks = await Promise.all(
@@ -110,7 +109,20 @@ const StocksProvider = ({ children }) => {
         }
       };
       
-
+      const refreshStocks = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/stocks`);
+          const stocksData = response.data;
+      
+          const updatedStocks = await Promise.all(
+            stocksData.map((stock) => updateStockPriceAndProfitLoss(stock))
+          );
+      
+          setStocks(updatedStocks); // Update the stocks state
+        } catch (err) {
+          console.error("Error fetching stocks:", err.message);
+        }
+      };
 
     // Load stocks on component mount
     useEffect(() => {
@@ -126,7 +138,9 @@ const StocksProvider = ({ children }) => {
                 addStock,
                 editStock,
                 deleteStock,
-                fetchStockPrices
+                fetchStockPrices,
+                fetchStocks,
+                refreshStocks
             }}
         >
             {children}
