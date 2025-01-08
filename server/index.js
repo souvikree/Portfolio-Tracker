@@ -18,7 +18,7 @@ connectDB();
 
 // Routes
 app.use('/api/stocks', stockRoutes);
-app.use('/api/users', userRoutes); 
+app.use('/api/', userRoutes); 
 
 const PORT = process.env.PORT || 8080;
 

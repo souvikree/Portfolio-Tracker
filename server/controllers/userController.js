@@ -60,19 +60,19 @@ exports.login = async (req, res) => {
 
 // Google OAuth Authentication
 exports.googleAuth = async (req, res) => {
-    const code = req.query.code; // Authorization code from Google
+    const code = req.query.code; 
     if (!code) {
         return res.status(400).json({ message: 'Authorization code not provided' });
     }
 
     try {
-        // Exchange code for tokens
-        const { tokens } = await oauth2Client.getToken(code);
-        oauth2Client.setCredentials(tokens);
+        
+        const googleRes = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(googleRes.tokens);
 
         // Retrieve user info
         const userInfo = await axios.get(
-            `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
+            `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
         );
         const { email, name, picture } = userInfo.data;
 

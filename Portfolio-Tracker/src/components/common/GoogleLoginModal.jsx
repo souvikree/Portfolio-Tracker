@@ -16,7 +16,8 @@ const GoogleLoginModal = ({ isOpen, onClose }) => {
         const token = result.data.token;
         const obj = { email, name, token, image };
         localStorage.setItem("user-info", JSON.stringify(obj));
-        navigate("/"); // Navigate to the home page after successful login
+        onClose();
+        navigate("/"); 
       } else {
         throw new Error(authResult);
       }

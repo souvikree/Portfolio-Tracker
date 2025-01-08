@@ -19,7 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<OverviewPage />} />
           <Route path="/current-stocks" element={<StocksListPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/profile" element={<SettingsPage />} />
         </Routes>
       </div>
     </GoogleOAuthProvider> 

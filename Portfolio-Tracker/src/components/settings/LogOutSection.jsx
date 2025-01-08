@@ -1,7 +1,15 @@
 import { motion } from "framer-motion";
 import {  LogOut} from "lucide-react";
 
+import { useNavigate } from 'react-router-dom';
+
 const LogOutSection = () => {
+
+	const navigate = useNavigate();
+	const handleLogout = ()=>{
+        localStorage.removeItem('user-info');
+        navigate('/');
+    }
 	return (
 		<motion.div
 			className='bg-red-900 bg-opacity-50 backdrop-filter backdrop-blur-lg shadow-lg rounded-xl p-6 border border-red-700 mb-8'
@@ -15,6 +23,7 @@ const LogOutSection = () => {
 			</div>
 			<p className='text-gray-300 mb-4'>By clicking this button you will be logged out of your account</p>
 			<button
+				onClick={handleLogout}
 				className='bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded 
       transition duration-200'
 			>

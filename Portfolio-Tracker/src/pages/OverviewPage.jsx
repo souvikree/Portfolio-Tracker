@@ -1,20 +1,19 @@
 import { motion } from "framer-motion";
 import { AlertTriangle, DollarSign, Package, TrendingUp } from "lucide-react";
-import { useStocks } from "../context/StockContext"; // Import the StocksContext
+import { useStocks } from "../context/StockContext"; 
 import Header from "../components/common/Header";
 import StatCard from "../components/common/StatCard";
 import CategoryDistributionChart from "../components/overview/PortfolioDistributionChart";
 
 
 const OverviewPage = () => {
-  const { stocks, loading, error } = useStocks(); // Use the context to fetch stocks 
-
+  const { stocks, loading, error } = useStocks(); 
   if (loading) {
-    return <div>Loading...</div>; // Show a loading indicator while fetching
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>; // Display an error message
+    return <div>Error: {error}</div>; 
   }
 
   // Calculate the total portfolio value

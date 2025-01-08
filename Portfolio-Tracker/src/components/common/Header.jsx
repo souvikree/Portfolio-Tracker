@@ -1,14 +1,30 @@
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AddStock from "./AddStock";
 import GoogleLoginModal from "./GoogleLoginModal"; // Import the GoogleLoginModal
 
 const Header = ({ title, onAddStock }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false); // State for Google Login Modal
+  const [user, setUser] = useState(null); // State for authenticated user info
 
   const showAddStockButton = ["/", "/current-stocks"].includes(location.pathname);
+
+  // Check if user is logged in (from localStorage)
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem("user-info"));
+    if (userInfo) {
+      setUser(userInfo); // Set user state if logged in
+    }
+  }, []);
+
+  // Handle Sign Out
+  // const handleSignOut = () => {
+  //   localStorage.removeItem("user-info");
+  //   setUser(null); // Clear user state on sign out
+  // };
 
   return (
     <>
@@ -24,13 +40,30 @@ const Header = ({ title, onAddStock }) => {
                 Add Stock
               </button>
             )}
-            {/* Add Sign In Button */}
-            <button
-              onClick={() => setIsGoogleModalOpen(true)}
-              className="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-green-700 focus:ring focus:ring-green-400 transition"
-            >
-              Sign In
-            </button>
+            {/* If user is authenticated, show profile, else show Sign In button */}
+            {user ? (
+              <>
+                <button
+                  onClick={() => navigate("/profile")} // Navigate to settings page
+                  className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-blue-700 focus:ring focus:ring-blue-400 transition"
+                >
+                  {user.name}
+                </button>
+                {/* <button
+                  onClick={handleSignOut}
+                  className="bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-red-700 focus:ring focus:ring-red-400 transition"
+                >
+                  Sign Out
+                </button> */}
+              </>
+            ) : (
+              <button
+                onClick={() => setIsGoogleModalOpen(true)}
+                className="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-green-700 focus:ring focus:ring-green-400 transition"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       </header>

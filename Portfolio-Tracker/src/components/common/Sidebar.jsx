@@ -11,7 +11,7 @@ const SIDEBAR_ITEMS = [
 		href: "/",
 	},
 	{ name: "Current Stocks", icon: ChartNoAxesCombined, color: "#8B5CF6", href: "/current-stocks" },
-	{ name: "Profile", icon: UserRound, color: "#6EE7B7", href: "/settings" },
+	{ name: "Profile", icon: UserRound, color: "#6EE7B7", href: "/profile" },
 ];
 
 const Sidebar = () => {
