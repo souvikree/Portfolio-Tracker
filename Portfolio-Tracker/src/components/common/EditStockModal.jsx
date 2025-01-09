@@ -1,20 +1,58 @@
-import { useState } from "react";
-import { useStocks } from "../../context/StockContext"; 
+/* eslint-disable no-unused-vars */
+import { useState, useEffect } from "react";
+import axios from "axios";
+import debounce from "lodash/debounce";
+import { useStocks } from "../../context/StockContext";
+
+const API_KEY = import.meta.env.VITE_FINNHUB_API_KEY; 
+const STOCK_API_URL = "https://finnhub.io/api/v1/quote"; 
 
 const EditStockModal = ({ stock, onCancel }) => {
-  const { editStock } = useStocks(); 
+  const { editStock } = useStocks();
   const [formData, setFormData] = useState(stock);
+  const [currentPrice, setCurrentPrice] = useState(stock.buyPrice); 
+  const [errorMessage, setErrorMessage] = useState("");
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Fetch stock price on ticker change
+  useEffect(() => {
+    const fetchStockPrice = async (ticker) => {
+      if (!ticker) return;
+
+      try {
+        const response = await axios.get(`${STOCK_API_URL}?symbol=${ticker}&token=${API_KEY}`);
+        if (response.data && response.data.c) {
+          setCurrentPrice(response.data.c); 
+          setFormData((prevData) => ({
+            ...prevData,
+            buyPrice: response.data.c, 
+          }));
+          setErrorMessage(""); 
+        }
+      } catch (error) {
+        setErrorMessage(`Failed to fetch stock price for ${ticker}. Please try again.`);
+      }
+    };
+
+    const debouncedFetchStockPrice = debounce(fetchStockPrice, 500);
+    debouncedFetchStockPrice(formData.ticker);
+
+    return () => {
+      debouncedFetchStockPrice.cancel();
+    };
+  }, [formData.ticker]);
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData._id) {
-      await editStock(formData);  
-      onCancel();  
+      await editStock(formData);
+      onCancel();
     } else {
       console.error("Stock ID is missing");
     }
@@ -61,10 +99,11 @@ const EditStockModal = ({ stock, onCancel }) => {
               type="number"
               name="buyPrice"
               value={formData.buyPrice}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded text-black"
+              readOnly // Make it read-only since it updates automatically
+              className="mt-1 block w-full p-2 border rounded text-black bg-gray-100"
             />
           </div>
+          {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
           <div className="flex justify-end">
             <button type="button" onClick={onCancel} className="bg-red-500 text-white px-4 py-2 rounded mr-2">
               Cancel

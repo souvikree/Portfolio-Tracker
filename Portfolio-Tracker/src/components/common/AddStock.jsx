@@ -84,7 +84,7 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
 
     setIsSubmitting(true);
     try {
-      const response = await axios.post(`${API_URL}/`, stockData);
+      const response = await axios.post(`${API_URL}/api/stocks`, stockData);
       if (response.status === 200) {
         onAddStock(stockData);
         setAlertMessage(`Your ${formData.stockName} is being added.`);

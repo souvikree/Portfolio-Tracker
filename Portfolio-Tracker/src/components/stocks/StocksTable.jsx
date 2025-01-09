@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Edit, Search, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -8,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const fetchStockPrices = async (ticker) => {
   try {
-    const response = await axios.get(`${API_URL}/stocks/${ticker}`);
+    const response = await axios.get(`${API_URL}/api/stocks/stocks/${ticker}`);
     return response.data.currentPrice || 0;
   } catch (error) {
     console.error(`Error fetching price for ${ticker}:`, error);
@@ -45,7 +46,7 @@ const StocksTable = () => {
   const refreshStocks = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/`);
+      const response = await axios.get(`${API_URL}/api/stocks`);
       const stocksData = response.data;
 
       const updatedStocks = await Promise.all(
@@ -73,7 +74,7 @@ const StocksTable = () => {
     setPortfolioValue(totalValue);
   }, [stocks]);
 
-  // Handle search functionality with debouncing
+  // searching with debouncing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       const filtered = stocks.filter(
@@ -103,7 +104,7 @@ const StocksTable = () => {
     if (confirmed) {
       alert(`The stock ${stockName} is being deleted.`);
       await deleteStock(id);
-      refreshStocks(); // Refresh stocks after deletion
+      refreshStocks(); // auto refresh after deleting stock
     }
   };
 
@@ -127,13 +128,13 @@ const StocksTable = () => {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        <p className="text-gray-300">
+        {/* <p className="text-gray-300">
           Total Portfolio Value:{" "}
           <span className="text-green-400">${portfolioValue.toFixed(2)}</span>
-        </p>
+        </p> */}
         <button
           onClick={refreshStocks}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className=" text-white px-4 py-2 rounded-full bg-blue-500 shadow-2xl "
         >
           Refresh Table
         </button>

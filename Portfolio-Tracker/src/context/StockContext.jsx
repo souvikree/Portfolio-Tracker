@@ -20,7 +20,7 @@ const StocksProvider = ({ children }) => {
     // Fetch stock price and calculate profit/loss
     const fetchStockPrices = async (ticker) => {
         try {
-          const response = await axios.get(`${API_URL}/stocks/${ticker}`);
+          const response = await axios.get(`${API_URL}/api/stocks/stocks/${ticker}`);
           return response.data.currentPrice || 0;
         } catch (error) {
           console.error(`Error fetching price for ${ticker}:`, error);
@@ -46,7 +46,7 @@ const StocksProvider = ({ children }) => {
     // Fetch stocks from the backend and update their profit/loss
     const fetchStocks = async () => {
         try {
-            const response = await axios.get(`${API_URL}/`);
+            const response = await axios.get(`${API_URL}/api/stocks`);
             const stocksData = response.data;
     
             const updatedStocks = await Promise.all(
@@ -66,7 +66,7 @@ const StocksProvider = ({ children }) => {
     // Add a new stock
     const addStock = async (stockData) => {
         try {
-            const response = await axios.post(`${API_URL}/`, stockData);
+            const response = await axios.post(`${API_URL}/api/stocks`, stockData);
             const savedStock = response.data;
 
             const stockWithProfitLoss = await updateStockPriceAndProfitLoss(savedStock);
@@ -80,7 +80,7 @@ const StocksProvider = ({ children }) => {
     const editStock = async (updatedStock) => {
         try {
             // Send the updated stock to the backend API
-            const response = await axios.put(`${API_URL}/${updatedStock._id}`, updatedStock);
+            const response = await axios.put(`${API_URL}/api/stocks/${updatedStock._id}`, updatedStock);
             
             // Assuming the API returns the updated stock data (if not, use the updatedStock)
             const updatedStockWithProfitLoss = await updateStockPriceAndProfitLoss(updatedStock);
@@ -102,7 +102,7 @@ const StocksProvider = ({ children }) => {
 
     const deleteStock = async (id) => {
         try {
-            await axios.delete(`${API_URL}/${id}`);
+            await axios.delete(`${API_URL}/api/stocks/${id}`);
             setStocks((prevStocks) => prevStocks.filter((stock) => stock._id !== id));  // Use _id
         } catch (err) {
             console.error("Error deleting stock:", err.message);
