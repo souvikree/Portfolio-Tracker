@@ -1,9 +1,25 @@
 const axios = require('axios');
+const Bottleneck = require('bottleneck'); 
 
 
-// Service to fetch stock prices using Finnhub API
-const getTheLatestStockPrice = async (ticker) => {
+const limiter = new Bottleneck({
+    minTime: 1000,
+    maxConcurrent: 1, 
+});
+
+
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; 
+
+
+const fetchStockPrice = async (ticker) => {
     try {
+        // Check cache
+        const cachedData = cache.get(ticker);
+        if (cachedData && Date.now() - cachedData.timestamp < CACHE_TTL) {
+            return cachedData.price;
+        }
+
         const response = await axios.get('https://finnhub.io/api/v1/quote', {
             params: {
                 symbol: ticker,
@@ -13,18 +29,28 @@ const getTheLatestStockPrice = async (ticker) => {
 
         const { c: currentPrice, d: change, dp: changePercent } = response.data;
 
-        // Check the remaining rate limit
-        const remaining = response.headers['X-RateLimit-Remaining'];
-        if (remaining <= 0) {
-            console.error(`Rate limit exceeded, try again later.`);
-            throw new Error(`Rate limit exceeded for ${ticker}`);
-        }
+        // Update cache
+        cache.set(ticker, { price: { ticker, currentPrice, change, changePercent }, timestamp: Date.now() });
 
         return { ticker, currentPrice, change, changePercent };
     } catch (error) {
-        console.error('Error fetching stock price:', error.message);
+        if (error.response?.status === 429) {
+            console.error(`Rate limit exceeded for ${ticker}. Serving cached data.`);
+        } else {
+            console.error('Error fetching stock price:', error.message);
+        }
+
+        // Return cached data if available, otherwise throw
+        const cachedData = cache.get(ticker);
+        if (cachedData) {
+            return cachedData.price;
+        }
+
         throw new Error(`Failed to fetch stock price for ${ticker}`);
     }
 };
+
+// Wrap fetchStockPrice with Bottleneck to throttle requests
+const getTheLatestStockPrice = limiter.wrap(fetchStockPrice);
 
 module.exports = { getTheLatestStockPrice };
