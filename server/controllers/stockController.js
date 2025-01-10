@@ -1,7 +1,6 @@
 const Stock = require('../models/Stock');
 const getTheLatestStockPrice = require('../utils/getTheLatestStockPrice');
 
-// Add a new stock
 exports.addStock = async (req, res) => {
     try {
         const { stockName, ticker, quantity, buyPrice } = req.body;
@@ -14,25 +13,24 @@ exports.addStock = async (req, res) => {
     }
 };
 
-// Update existing stock details
 exports.updateStock = async (req, res) => {
-    const { id } = req.params;  // Use the unique id instead of ticker
+    const { id } = req.params; 
     const { stockName,ticker, quantity, buyPrice } = req.body;
 
     try {
         
         const updatedStock = await Stock.findByIdAndUpdate(
-            id,  // Use _id here instead of ticker
+            id,  
             { stockName,ticker, quantity, buyPrice },
-            { new: true }  // Return the updated document
+            { new: true }  
         );
 
-        // If stock is not found, return an error
+        
         if (!updatedStock) {
             return res.status(404).json({ error: 'Stock not found' });
         }
 
-        // Return the updated stock as a response
+        
         res.json(updatedStock);
     } catch (error) {
         console.error('Error editing stock:', error.message);
@@ -41,9 +39,9 @@ exports.updateStock = async (req, res) => {
 };
 
 
-// Delete a stock
+
 exports.deleteStock = async (req, res) => {
-    const { id } = req.params;  // Use the unique id instead of ticker
+    const { id } = req.params; 
     try {
         
         const deletedStock = await Stock.findByIdAndDelete(id);
@@ -61,7 +59,6 @@ exports.deleteStock = async (req, res) => {
 };
 
 
-// Fetch all stocks and calculate the portfolio value
 exports.getStocks = async (req, res) => {
     try {
         const stocks = await Stock.find();

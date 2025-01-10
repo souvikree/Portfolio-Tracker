@@ -9,14 +9,14 @@ const limiter = new Bottleneck({
 
 
 const cache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; 
+const cache_ttl = 5 * 60 * 1000; 
 
 
 const fetchStockPrice = async (ticker) => {
     try {
-        // Check cache
+       
         const cachedData = cache.get(ticker);
-        if (cachedData && Date.now() - cachedData.timestamp < CACHE_TTL) {
+        if (cachedData && Date.now() - cachedData.timestamp < cache_ttl) {
             return cachedData.price;
         }
 
@@ -29,7 +29,7 @@ const fetchStockPrice = async (ticker) => {
 
         const { c: currentPrice, d: change, dp: changePercent } = response.data;
 
-        // Update cache
+        
         cache.set(ticker, { price: { ticker, currentPrice, change, changePercent }, timestamp: Date.now() });
 
         return { ticker, currentPrice, change, changePercent };
@@ -40,7 +40,7 @@ const fetchStockPrice = async (ticker) => {
             console.error('Error fetching stock price:', error.message);
         }
 
-        // Return cached data if available, otherwise throw
+      
         const cachedData = cache.get(ticker);
         if (cachedData) {
             return cachedData.price;
@@ -50,7 +50,7 @@ const fetchStockPrice = async (ticker) => {
     }
 };
 
-// Wrap fetchStockPrice with Bottleneck to throttle requests
+
 const getTheLatestStockPrice = limiter.wrap(fetchStockPrice);
 
 module.exports = { getTheLatestStockPrice };
