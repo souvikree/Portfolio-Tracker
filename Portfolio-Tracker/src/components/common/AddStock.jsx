@@ -3,7 +3,7 @@ import axios from "axios";
 import { debounce } from "lodash";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
-const STOCK_API_URL="https://finnhub.io/api/v1/quote";
+const STOCK_API_URL = "https://finnhub.io/api/v1/quote";
 const API_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
 
 const AddStock = ({ isOpen, onClose, onAddStock }) => {
@@ -18,7 +18,6 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
   const [currentPrice, setCurrentPrice] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Reset form data when modal opens
   useEffect(() => {
     if (!isOpen) {
       setFormData({
@@ -103,13 +102,13 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75">
-      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Add Stock</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50 px-4 sm:px-6">
+      <div className="bg-white rounded-lg shadow-xl w-full sm:w-[500px] p-6 space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-900">Add Stock</h2>
 
         {alertMessage && (
           <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
-            <span className="font-medium">Success alert!</span> {alertMessage}
+            <span className="font-medium">Success!</span> {alertMessage}
           </div>
         )}
         {errorMessage && (
@@ -118,75 +117,75 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="stockName" className="block text-gray-700 font-medium">Stock Name</label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="stockName" className="block text-sm font-medium text-gray-700">Stock Name</label>
             <input
               type="text"
               id="stockName"
               name="stockName"
               value={formData.stockName}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-400 text-black"
+              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none  text-black"
               placeholder="e.g., Apple Inc."
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="ticker" className="block text-gray-700 font-medium">Ticker Symbol</label>
+          <div>
+            <label htmlFor="ticker" className="block text-sm font-medium text-gray-700">Ticker Symbol</label>
             <input
               type="text"
               id="ticker"
               name="ticker"
               value={formData.ticker}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-400 text-black"
+              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none  text-black"
               placeholder="e.g., AAPL"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="quantity" className="block text-gray-700 font-medium">Quantity</label>
+          <div>
+            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
             <input
               type="number"
               id="quantity"
               name="quantity"
               value={formData.quantity}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-400 text-black"
+              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none  text-black"
               placeholder="e.g., 10"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="buyPrice" className="block text-gray-700 font-medium">Buy Price (per unit)</label>
+          <div>
+            <label htmlFor="buyPrice" className="block text-sm font-medium text-gray-700">Buy Price (per unit)</label>
             <input
               type="number"
               id="buyPrice"
               name="buyPrice"
               value={formData.buyPrice}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-400 text-black"
+              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
               placeholder="e.g., 145.50"
               required
               min={currentPrice}
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-between">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-500 focus:ring focus:ring-gray-300 mr-2"
+              className="bg-gray-400 text-white px-6 py-3 rounded-lg shadow-md hover:bg-gray-500 focus:ring-2 focus:ring-gray-400"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 focus:ring focus:ring-blue-400 ${
+              className={`bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 ${
                 isSubmitting ? "opacity-50 cursor-not-allowed" : ""
               }`}
               disabled={isSubmitting}

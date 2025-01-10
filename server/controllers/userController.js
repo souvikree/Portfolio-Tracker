@@ -11,16 +11,13 @@ exports.signup = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user
         const user = new User({ name, email, password: hashedPassword });
         await user.save();
 
@@ -35,19 +32,17 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Find user
+       
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Check password
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Generate token
         const token = jwt.sign({ userId: user._id, email }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
@@ -58,7 +53,7 @@ exports.login = async (req, res) => {
     }
 };
 
-// Google OAuth Authentication
+
 exports.googleAuth = async (req, res) => {
     const code = req.query.code; 
     if (!code) {
@@ -76,14 +71,12 @@ exports.googleAuth = async (req, res) => {
         );
         const { email, name, picture } = userInfo.data;
 
-        // Check if user exists
         let user = await User.findOne({ email });
         if (!user) {
             // Create a new user if not found
             user = await User.create({ name, email, image: picture });
         }
 
-        // Generate JWT token
         const token = jwt.sign({ userId: user._id, email }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
@@ -101,7 +94,6 @@ exports.googleAuth = async (req, res) => {
     }
 };
 
-// Logout
 exports.logout = (req, res) => {
     try {
         res.status(200).json({ message: 'Logout successful' });
@@ -110,7 +102,7 @@ exports.logout = (req, res) => {
     }
 };
 
-// Get Current User
+
 exports.getCurrentUser = async (req, res) => {
     try {
         const user = await User.findById(req.userId).select('-password'); // Exclude password
@@ -123,18 +115,4 @@ exports.getCurrentUser = async (req, res) => {
     }
 };
 
-// Middleware to Authenticate JWT
-// exports.authenticateToken = (req, res, next) => {
-//     const token = req.headers.authorization?.split(' ')[1];
-//     if (!token) {
-//         return res.status(401).json({ message: 'Access token missing' });
-//     }
 
-//     try {
-//         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//         req.userId = decoded.userId;
-//         next();
-//     } catch (error) {
-//         res.status(403).json({ message: 'Invalid or expired token' });
-//     }
-// };

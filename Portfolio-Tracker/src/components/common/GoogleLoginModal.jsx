@@ -17,7 +17,7 @@ const GoogleLoginModal = ({ isOpen, onClose }) => {
         const obj = { email, name, token, image };
         localStorage.setItem("user-info", JSON.stringify(obj));
         onClose();
-        navigate("/"); 
+        navigate("/");
       } else {
         throw new Error(authResult);
       }
@@ -37,7 +37,10 @@ const GoogleLoginModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-80">
-      <div className="relative bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-w-sm w-full p-8 text-center">
+      <div
+        className="relative bg-gray-800 border border-gray-700 rounded-lg shadow-lg w-full max-w-sm sm:max-w-lg p-8 text-center sm:p-10 mx-4 sm:mx-auto overflow-auto"
+        style={{ maxHeight: "90vh" }} // Ensure the modal doesn't exceed screen height
+      >
         {/* Close Icon */}
         <button
           onClick={onClose}
@@ -57,12 +60,12 @@ const GoogleLoginModal = ({ isOpen, onClose }) => {
         </button>
 
         {/* Modal Title */}
-        <h2 className="text-2xl font-semibold text-gray-100 mb-6">Sign in with Google</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-100 mb-6">Sign in with Google</h2>
 
         {/* Google Sign-In Button */}
         <button
           onClick={googleLogin}
-          className="flex items-center justify-center border border-gray-600 text-gray-200 font-medium px-6 py-3 rounded-lg shadow-sm hover:border-gray-400 hover:text-white transition-colors duration-300 w-full"
+          className="flex items-center justify-center border border-gray-600 text-gray-200 font-medium px-6 py-3 rounded-lg shadow-sm hover:border-gray-400 hover:text-white transition-colors duration-300 w-full text-sm sm:text-base"
         >
           <Icon icon="logos:google-icon" width="24" height="24" className="mr-3" />
           Sign in with Google

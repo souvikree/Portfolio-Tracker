@@ -4,19 +4,17 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const stockRoutes = require('./routes/stockRoutes');
-const userRoutes = require('./routes/userRoutes'); // Import user routes
+const userRoutes = require('./routes/userRoutes'); 
 
 dotenv.config();
 const app = express();
 
-// Middleware
 app.use(bodyParser.json());
 app.use(cors());
 
 
 connectDB();
 
-// Routes
 app.use('/api/stocks', stockRoutes);
 app.use('/api/', userRoutes); 
 

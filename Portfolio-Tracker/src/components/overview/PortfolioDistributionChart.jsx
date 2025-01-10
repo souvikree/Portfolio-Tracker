@@ -1,13 +1,20 @@
 /* eslint-disable no-unused-vars */
 import { motion } from "framer-motion";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { useEffect, useState } from "react";
-import { useStocks } from "../../context/StockContext"; 
+import { useStocks } from "../../context/StockContext";
 
 const COLORS = ["#6366F1", "#8B5CF6", "#EC4899", "#10B981", "#F59E0B"];
 
 const PortfolioDistributionChart = () => {
-  const { stocks, fetchStockPrices } = useStocks(); 
+  const { stocks, fetchStockPrices } = useStocks();
   const [stockData, setStockData] = useState([]);
   const [portfolioValue, setPortfolioValue] = useState(0);
 
@@ -37,15 +44,19 @@ const PortfolioDistributionChart = () => {
 
   return (
     <motion.div
-      className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700"
+      className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-4 sm:p-6 border border-gray-700 transition-all duration-300 ease-in-out"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
     >
-      <h2 className="text-lg font-medium mb-4 text-gray-100">Portfolio Distribution</h2>
+      <div className="flex items-center space-x-2 mb-4">
+        <h2 className="text-lg font-semibold text-gray-100">
+          Portfolio Distribution
+        </h2>
+        <span className="text-gray-300 text-xl">📊</span>
+      </div>
 
-
-      <div className="h-80">
+      <div className="h-64 sm:h-80 text-[0.5rem] sm:text-[1rem]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -53,7 +64,7 @@ const PortfolioDistributionChart = () => {
               cx="50%"
               cy="50%"
               labelLine={false}
-              outerRadius={80}
+              outerRadius="60%"
               dataKey="value"
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             >
@@ -69,12 +80,26 @@ const PortfolioDistributionChart = () => {
               itemStyle={{ color: "#E5E7EB" }}
               formatter={(value, name, props) => {
                 const stock = stockData.find((stock) => stock.name === name);
-                return [`$${stock ? stock.price.toFixed(2) : 0}`, `Quantity: ${stock ? stock.quantity : 0}`];
+                return [
+                  `$${stock ? stock.price.toFixed(2) : 0}`,
+                  `Quantity: ${stock ? stock.quantity : 0}`,
+                ];
               }}
             />
-            <Legend />
+            <Legend
+              wrapperStyle={{
+                fontSize: "0.8rem",
+                textAlign: "center",
+                color: "#A0AEC0",
+              }}
+            />
           </PieChart>
         </ResponsiveContainer>
+      </div>
+
+      <div className="flex justify-between mt-4 text-sm text-gray-400">
+        {/* <p>Total Portfolio Value: <span className="text-green-400">${portfolioValue.toFixed(2)}</span></p> */}
+        <p className="text-sm text-gray-500">🔄 Refresh your portfolio anytime!</p>
       </div>
     </motion.div>
   );

@@ -9,6 +9,8 @@ A full-stack web application for managing stock portfolios, featuring Google OAu
 - **Google OAuth Integration**: Secure login using Google accounts.
 - **Portfolio Management**: Add, edit, delete, and fetch stock holdings.
 - **Real-Time Prices**: Display updated stock prices using the Finnhub API.
+- **Responsive Design**: Ensure the layout adapts seamlessly in any devices.
+
 
 ---
 
