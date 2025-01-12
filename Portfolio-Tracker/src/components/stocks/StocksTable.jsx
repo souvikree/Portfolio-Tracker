@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import EditStockModal from "../common/EditStockModal";
 import { useStocks } from "../../context/StockContext";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -33,6 +33,33 @@ const updateStockPriceAndProfitLoss = async (stock) => {
   }
 };
 
+const ConfirmationModal = ({ isOpen, message, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-80">
+        <p className="text-white mb-6">{message}</p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors duration-300 active:bg-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors duration-300 active:bg-red-700"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 const StocksTable = () => {
   const { deleteStock, editStock, error } = useStocks();
   const [stocks, setStocks] = useState([]);
@@ -42,6 +69,8 @@ const StocksTable = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStock, setEditingStock] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [stockToDelete, setStockToDelete] = useState(null);
 
   const refreshStocks = async () => {
     setLoading(true);
@@ -97,27 +126,31 @@ const StocksTable = () => {
     refreshStocks();
   };
 
-  const handleDelete = async (id, stockName) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete the stock: ${stockName}?`
-    );
-    if (confirmed) {
-      alert(`The stock ${stockName} is being deleted.`);
-      await deleteStock(id);
+  const confirmDelete = (stock) => {
+    setStockToDelete(stock);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (stockToDelete) {
+      await deleteStock(stockToDelete._id);
+      setIsModalOpen(false);
       refreshStocks();
     }
   };
 
-  if (loading) return <DotLottieReact
-  src="https://lottie.host/e2c61ba4-21e4-40f9-a0db-7b2d24c6e957/C478Vf7tEE.lottie"
-  loop
-  autoplay
-/>
+  if (loading)
+    return (
+      <DotLottieReact
+        src="https://lottie.host/e2c61ba4-21e4-40f9-a0db-7b2d24c6e957/C478Vf7tEE.lottie"
+        loop
+        autoplay
+      />
+    );
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
   return (
     <div className="bg-gray-800 shadow-lg rounded-xl p-6 mb-10">
-      {/* Responsive Header */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
         <h2 className="text-lg sm:text-xl font-semibold text-white">
           Stock Portfolio 📈
@@ -134,19 +167,12 @@ const StocksTable = () => {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0">
-        {/* Uncomment if portfolio value needs display */}
-        {/* <p className="text-gray-300 text-sm">
-      Total Portfolio Value:{" "}
-      <span className="text-green-400">${portfolioValue.toFixed(2)}</span>
-    </p> */}
-        <button
-          onClick={refreshStocks}
-          className="w-full sm:w-auto text-white px-4 py-2 rounded-full bg-blue-500 shadow-lg hover:bg-blue-600 transition-all duration-300"
-        >
-          Refresh Table 🔄
-        </button>
-      </div>
+      <button
+        onClick={refreshStocks}
+        className="w-full sm:w-auto text-white px-4 py-2 rounded-full bg-blue-500 shadow-lg hover:bg-blue-600 transition-all duration-300 mb-4"
+      >
+        Refresh Table
+      </button>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-700">
@@ -209,7 +235,7 @@ const StocksTable = () => {
                   </button>
                   <button
                     className="text-red-400 hover:text-red-300"
-                    onClick={() => handleDelete(stock._id, stock.stockName)}
+                    onClick={() => confirmDelete(stock)}
                   >
                     <Trash2 size={18} />
                   </button>
@@ -225,6 +251,15 @@ const StocksTable = () => {
           stock={editingStock}
           onSave={handleSave}
           onCancel={() => setIsEditModalOpen(false)}
+        />
+      )}
+
+      {isModalOpen && (
+        <ConfirmationModal
+          isOpen={isModalOpen}
+          message={`Are you sure you want to delete the stock ${stockToDelete?.stockName}?`}
+          onConfirm={handleDelete}
+          onCancel={() => setIsModalOpen(false)}
         />
       )}
     </div>
