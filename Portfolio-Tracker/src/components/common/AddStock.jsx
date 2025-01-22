@@ -13,10 +13,46 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
     quantity: "",
     buyPrice: "",
   });
+  const [stockSuggestions, setStockSuggestions] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [currentPrice, setCurrentPrice] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const fetchStockSuggestions = debounce(async (query) => {
+    if (!query) return;
+    try {
+      const response = await axios.get(
+        `https://finnhub.io/api/v1/search?q=${query}&token=${API_KEY}`
+      );
+      const suggestions = response.data.result || [];
+      // Only keep the first suggestion
+      if (suggestions.length > 0) {
+        setStockSuggestions([suggestions[0]]);
+      } else {
+        setStockSuggestions([]);
+      }
+    } catch (error) {
+      console.error("Error fetching stock suggestions:", error);
+    }
+  }, 300);
+
+  const selectSuggestion = (suggestion) => {
+    setFormData({
+      stockName: suggestion.description,
+    });
+    setStockSuggestions([]);
+  };
+
+  // const handleTabKey = (e) => {
+  //   if (e.key === "Tab" && stockSuggestions.length > 0) {
+  //     setFormData({
+  //       ...formData,
+  //       stockName: stockSuggestions[0].description,
+  //     });
+  //     e.preventDefault(); // Prevent the default tab behavior
+  //   }
+  // };
 
   useEffect(() => {
     if (!isOpen) {
@@ -34,7 +70,9 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
       if (!ticker) return;
 
       try {
-        const response = await axios.get(`${STOCK_API_URL}?symbol=${ticker}&token=${API_KEY}`);
+        const response = await axios.get(
+          `${STOCK_API_URL}?symbol=${ticker}&token=${API_KEY}`
+        );
         if (response.data && response.data.c) {
           setCurrentPrice(response.data.c);
           setFormData((prevData) => ({
@@ -43,7 +81,9 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
           }));
         }
       } catch (error) {
-        setErrorMessage(`Failed to fetch {${ticker}} stock price. Please try again.`);
+        setErrorMessage(
+          `Failed to fetch {${ticker}} stock price. Please try again.`
+        );
         setAlertMessage("");
       }
     };
@@ -58,13 +98,22 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "stockName") {
+      fetchStockSuggestions(value);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.stockName || !formData.ticker || !formData.quantity || !formData.buyPrice) {
+    if (
+      !formData.stockName ||
+      !formData.ticker ||
+      !formData.quantity ||
+      !formData.buyPrice
+    ) {
       alert("Please fill out all fields.");
       return;
     }
@@ -93,7 +142,10 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
         }, 3000);
       }
     } catch (error) {
-      alert("Failed to add stock: " + (error.response?.data?.message || "Unknown error"));
+      alert(
+        "Failed to add stock: " +
+          (error.response?.data?.message || "Unknown error")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -107,61 +159,103 @@ const AddStock = ({ isOpen, onClose, onAddStock }) => {
         <h2 className="text-2xl font-semibold text-gray-900">Add Stock</h2>
 
         {alertMessage && (
-          <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+          <div
+            className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
+            role="alert"
+          >
             <span className="font-medium">Success!</span> {alertMessage}
           </div>
         )}
         {errorMessage && (
-          <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+          <div
+            className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+            role="alert"
+          >
             <span className="font-medium">Error:</span> {errorMessage}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="stockName" className="block text-sm font-medium text-gray-700">Stock Name</label>
-            <input
-              type="text"
-              id="stockName"
-              name="stockName"
-              value={formData.stockName}
-              onChange={handleInputChange}
-              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none  text-black"
-              placeholder="e.g., Apple Inc."
-              required
-            />
+            <label
+              htmlFor="stockName"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Stock Name
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                id="stockName"
+                name="stockName"
+                value={formData.stockName}
+                onChange={handleInputChange}
+                // onKeyDown={handleTabKey}
+                className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
+                placeholder="e.g., Apple Inc."
+                required
+              />
+              {stockSuggestions.length > 0 && (
+                <div className="absolute top-0 left-0 mt-12 w-full bg-white border border-gray-300 rounded-lg shadow-lg p-2 text-black">
+                  {stockSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => selectSuggestion(suggestion)}
+                    >
+                      {suggestion.description}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
-            <label htmlFor="ticker" className="block text-sm font-medium text-gray-700">Ticker Symbol</label>
+            <label
+              htmlFor="ticker"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Ticker Symbol
+            </label>
             <input
               type="text"
               id="ticker"
               name="ticker"
               value={formData.ticker}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none  text-black"
+              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
               placeholder="e.g., AAPL"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+            <label
+              htmlFor="quantity"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Quantity
+            </label>
             <input
               type="number"
               id="quantity"
               name="quantity"
               value={formData.quantity}
               onChange={handleInputChange}
-              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none  text-black"
+              className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
               placeholder="e.g., 10"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="buyPrice" className="block text-sm font-medium text-gray-700">Buy Price (per unit)</label>
+            <label
+              htmlFor="buyPrice"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Buy Price (per unit)
+            </label>
             <input
               type="number"
               id="buyPrice"
