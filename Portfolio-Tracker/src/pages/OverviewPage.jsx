@@ -1,29 +1,33 @@
 import { motion } from "framer-motion";
 import { AlertTriangle, DollarSign, Package, TrendingUp } from "lucide-react";
-import { useStocks } from "../context/StockContext"; 
+import { useStocks } from "../context/StockContext";
 import Header from "../components/common/Header";
 import StatCard from "../components/common/StatCard";
 import CategoryDistributionChart from "../components/overview/PortfolioDistributionChart";
 
-
 const OverviewPage = () => {
-  const { stocks, loading, error } = useStocks(); 
+  const { stocks, loading, error } = useStocks();
   if (loading) {
     return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>; 
+    return <div>Error: {error}</div>;
   }
 
   // Calculate the total portfolio value
-  const totalValue = stocks.reduce(
-    (sum, stock) => sum + stock.currentPrice * stock.quantity,
-    0
-  ).toFixed(2);
+  const totalValue = stocks
+    .reduce((sum, stock) => sum + stock.currentPrice * stock.quantity, 0)
+    .toFixed(2);
 
-  const topPerformingStock = stocks.reduce((a, b) => (b.profitLoss > a.profitLoss ? b : a), stocks[0]);
-  const lowPerformingStock = stocks.reduce((a, b) => (b.profitLoss < a.profitLoss ? b : a), stocks[0]);
+  const topPerformingStock = stocks.reduce(
+    (a, b) => (b.profitLoss > a.profitLoss ? b : a),
+    stocks[0]
+  );
+  const lowPerformingStock = stocks.reduce(
+    (a, b) => (b.profitLoss < a.profitLoss ? b : a),
+    stocks[0]
+  );
 
   return (
     <div className="flex-1 overflow-auto relative z-10">
@@ -37,21 +41,38 @@ const OverviewPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-          <StatCard name="Total Stocks" icon={Package} value={stocks.length} color="#6366F1" />
+          <StatCard
+            name="Total Stocks"
+            icon={Package}
+            value={stocks.length}
+            color="#6366F1"
+          />
           <StatCard
             name="Top Performing Stock"
             icon={TrendingUp}
-            value={`${topPerformingStock.stockName} (${topPerformingStock.ticker})`} //
+            value={
+              topPerformingStock
+                ? `${topPerformingStock.stockName} (${topPerformingStock.ticker})`
+                : "No data available"
+            }
             color="#10B981"
           />
           <StatCard
             name="Low Stock"
             className={"text-red-500"}
             icon={AlertTriangle}
-            value={`${lowPerformingStock.stockName} (${lowPerformingStock.ticker})`}
+            value={
+              topPerformingStock
+              ? `${lowPerformingStock.stockName} (${lowPerformingStock.ticker})`
+              : "No data available"}
             color="#F59E0B"
           />
-          <StatCard name="Total Portfolio Value" icon={DollarSign} value={`$${totalValue}`} color="#EF4444" />
+          <StatCard
+            name="Total Portfolio Value"
+            icon={DollarSign}
+            value={`$${totalValue}`}
+            color="#EF4444"
+          />
         </motion.div>
 
         {/* CHARTS */}
